@@ -6,9 +6,33 @@
 #define FIREBASE_AUTH "wy4VhHdDTtKxPNBIqzTSB9HcM0yFddrJHl2Rwlp4" 
 #define WIFI_SSID "EiG" 
 #define WIFI_PASSWORD "12344321" 
+#define CLIENT_ID "/1"
 
+int hum, voc, co2, particulate;
+int hum_set, voc_set, co2_set, particulate_set;
 FirebaseData firebaseData;
-FirebaseJson json;
+
+bool readDataFirebase(){
+  if( Firebase.getInt(firebaseData, CLIENT_ID + String("/humidity_set"), hum_set) &
+  Firebase.getInt(firebaseData, CLIENT_ID + String("/voc_set"), voc_set) &
+  Firebase.getInt(firebaseData, CLIENT_ID + String("/co2_set"), co2_set) &
+  Firebase.getInt(firebaseData, CLIENT_ID + String("/particulate_set"), particulate_set)){
+    return true;
+  }
+  return false;
+}
+
+bool readDataLocal(){
+
+}
+
+bool setDataFirebase(){
+
+}
+
+bool setDataLocal(){
+  
+}
 
 void setup() {
   Serial.begin(115200);
@@ -25,10 +49,9 @@ void setup() {
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
+  readDataFirebase();
   Firebase.setDouble(firebaseData,"/Sensor/data1",369);
   delay(1000);
-  json.set("/data", 1786);
   Firebase.setDouble(firebaseData,"/Sensor/data1",6978);
   delay(1000);
   double a;

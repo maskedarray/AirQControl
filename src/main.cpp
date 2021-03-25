@@ -16,27 +16,27 @@ int hum, voc, co2, particulate;
 int hum_set, voc_set, co2_set, particulate_set;
 FirebaseData firebaseData;
 
-bool readDataFirebase(){
-  if( Firebase.getInt(firebaseData, CLIENT_ID + String("/humidity_set"), hum_set) &
-  Firebase.getInt(firebaseData, CLIENT_ID + String("/voc_set"), voc_set) &
-  Firebase.getInt(firebaseData, CLIENT_ID + String("/co2_set"), co2_set) &
-  Firebase.getInt(firebaseData, CLIENT_ID + String("/particulate_set"), particulate_set)){
-    return true;
-  }
-  return false;
-}
+// bool readDataFirebase(){
+//   if( Firebase.getInt(firebaseData, CLIENT_ID + String("/humidity_set"), hum_set) &
+//   Firebase.getInt(firebaseData, CLIENT_ID + String("/voc_set"), voc_set) &
+//   Firebase.getInt(firebaseData, CLIENT_ID + String("/co2_set"), co2_set) &
+//   Firebase.getInt(firebaseData, CLIENT_ID + String("/particulate_set"), particulate_set)){
+//     return true;
+//   }
+//   return false;
+// }
 
-bool readDataLocal(){
+// bool readDataLocal(){
 
-}
+// }
 
-bool setDataFirebase(){
+// bool setDataFirebase(){
 
-}
+// }
 
-bool setDataLocal(){
+// bool setDataLocal(){
 
-}
+// }
 
 void setup() {
   Serial.begin(115200);
@@ -52,7 +52,7 @@ void setup() {
   // Firebase.setwriteSizeLimit(firebaseData, "tiny");
 
 }
-
+StaticJsonDocument<200> doc;
 void loop() {
   // readDataFirebase();
   // Firebase.setDouble(firebaseData,"/Sensor/data1",369);
@@ -79,6 +79,9 @@ void loop() {
         Serial.println(httpResponseCode);
         String payload = http.getString();
         Serial.println(payload);
+        deserializeJson(doc, payload);
+        double res = doc["humid"];
+        Serial.println(res);
       }
       else {
         Serial.print("Error code: ");

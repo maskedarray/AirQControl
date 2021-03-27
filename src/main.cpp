@@ -40,6 +40,13 @@ String IpAddress2String(const IPAddress& ipAddress)
   String(ipAddress[3])  ;
 }
 
+void setRelays(){
+  digitalWrite(5, (voc > voc_set)? HIGH:LOW);
+  digitalWrite(18, (co2 > co2_set)? HIGH:LOW);
+  digitalWrite(19, (hum > hum_set)? HIGH:LOW);
+  digitalWrite(21, (particulate > particulate_set)? HIGH:LOW);
+}
+
 bool readDataFirebase(){
   if( Firebase.getInt(firebaseData, CLIENT_ID + String("/humidity_set"), hum_set) &
   Firebase.getInt(firebaseData, CLIENT_ID + String("/voc_set"), voc_set) &
@@ -61,7 +68,7 @@ bool readDataLocal(){
       http.begin(serverPath.c_str());
       int httpResponseCode = http.GET();
       
-      if (httpResponseCode>0) {
+      if (httpResponseCode == 200) {
         Serial.print("HTTP Response code: ");
         Serial.println(httpResponseCode);
         String payload = http.getString();
@@ -73,17 +80,22 @@ bool readDataLocal(){
         particulate = doc["pm25"];
         dtime = doc["timestamp"].as<String>();
         dtime.replace("T"," ");
+        dtime = dtime.substring(0,19);
         Serial.println(voc);
         Serial.println(particulate);
         Serial.println(co2);
         Serial.println(hum);
+        setRelays();
+        http.end();
+        return true;
       }
       else {
         Serial.print("Error code: ");
         Serial.println(httpResponseCode);
+        http.end();
+        return false;
       }
-      http.end();
-      return true;
+      
     }
     else {
       Serial.println("WiFi Disconnected");
@@ -99,18 +111,12 @@ bool setDataFirebase(){
   Firebase.setInt(firebaseData, CLIENT_ID + String("/voc"), voc) &
   Firebase.setInt(firebaseData, CLIENT_ID + String("/co2"), co2) &
   Firebase.setInt(firebaseData, CLIENT_ID + String("/particulate"), particulate) &
-  Firebase.setString(firebaseData, CLIENT_ID + String("/time"), dtime.substring(0,19))){
+  Firebase.setString(firebaseData, CLIENT_ID + String("/time"), dtime)){
     return true;
   }
   return false;
 }
 
-void setRelays(){
-  digitalWrite(5, (voc > voc_set)? HIGH:LOW);
-  digitalWrite(18, (co2 > co2_set)? HIGH:LOW);
-  digitalWrite(19, (hum > hum_set)? HIGH:LOW);
-  digitalWrite(21, (particulate > particulate_set)? HIGH:LOW);
-}
 
 void handleServer(){
   WiFiClient client = server.available();   // Listen for incoming clients
@@ -144,8 +150,10 @@ void handleServer(){
               client.println(voc);
             } else if (header.indexOf("GET /co2") >= 0) {
               client.println(co2);
-            } else if (header.indexOf("GET /pm25") >= 0) {
+            } else if (header.indexOf("GET /particulate") >= 0) {
               client.println(particulate);
+            } else if (header.indexOf("GET /time") >= 0) {
+              client.println(dtime);
             }
             
             client.println();
@@ -189,20 +197,30 @@ void setup() {
 }
 
 void loop() {
-  if(readDataLocal())
+  if(readDataLocal()){
     Serial.println("reading local data success!");
+    if(readDataFirebase())
+      Serial.println("reading firebase data success!");
+    else
+      Serial.println("reading firebase data failure!");
+    if(setDataFirebase())
+      Serial.println("writing firebase data success!");
+    else
+      Serial.println("writing firebase data failure!");
+    handleServer();
+  }
   else
     Serial.println("reading local data failure!");
-  if(readDataFirebase())
-    Serial.println("reading firebase data success!");
-  else
-    Serial.println("reading firebase data failure!");
-  if(setDataFirebase())
-    Serial.println("writing firebase data success!");
-  else
-    Serial.println("writing firebase data failure!");
-  setRelays();
+  
   delay(1000);
-  Serial.println("okay");
+  Serial.println("params:");
+  Serial.println(hum);
+  Serial.println(voc);
+  Serial.println(co2);
+  Serial.println(particulate);
+  Serial.println(hum_set);
+  Serial.println(voc_set);
+  Serial.println(co2_set);
+  Serial.println(particulate_set);
 
 }

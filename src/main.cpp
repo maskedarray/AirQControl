@@ -3,6 +3,7 @@
 #include "WiFi.h"
 #include "ArduinoJson.h"
 #include <HTTPClient.h>
+#include <ESP32Ping.h>
 
 #define FIREBASE_HOST "airqcontrol-dbc92-default-rtdb.firebaseio.com" 
 #define FIREBASE_AUTH "wy4VhHdDTtKxPNBIqzTSB9HcM0yFddrJHl2Rwlp4" 
@@ -10,7 +11,8 @@
 #define WIFI_PASSWORD "12344321" 
 #define CLIENT_ID "/1"
 
-String serverName = "http://47.202.196.192:80/air-data/latest";
+String serverName = "http://192.168.0.104:80/air-data/latest";
+IPAddress pingip (8, 8, 8, 8);
 
 int hum, voc, co2, particulate;
 int hum_set, voc_set, co2_set, particulate_set;
@@ -23,6 +25,8 @@ unsigned long currentTime = millis();
 unsigned long previousTime = 0; 
 const long timeoutTime = 2000;
 StaticJsonDocument<500> doc;
+TaskHandle_t Shandler;
+void vServerHandler( void *pvParameters );
 /*
  * Things to get out of doc:
  * 1. voc
@@ -81,6 +85,9 @@ bool readDataLocal(){
         dtime = doc["timestamp"].as<String>();
         dtime.replace("T"," ");
         dtime = dtime.substring(0,19);
+        hum = hum + random(0,10);
+        voc = voc + random(0,10);
+        co2 = co2 + random(0,10);
         Serial.println(voc);
         Serial.println(particulate);
         Serial.println(co2);
@@ -117,7 +124,6 @@ bool setDataFirebase(){
   return false;
 }
 
-
 void handleServer(){
   WiFiClient client = server.available();   // Listen for incoming clients
 
@@ -145,15 +151,15 @@ void handleServer(){
             
             // turns the GPIOs on and off
             if (header.indexOf("GET /hum") >= 0) {
-              client.println(hum);
+              client.print(hum);
             } else if (header.indexOf("GET /voc") >= 0) {
-              client.println(voc);
+              client.print(voc);
             } else if (header.indexOf("GET /co2") >= 0) {
-              client.println(co2);
+              client.print(co2);
             } else if (header.indexOf("GET /particulate") >= 0) {
-              client.println(particulate);
+              client.print(particulate);
             } else if (header.indexOf("GET /time") >= 0) {
-              client.println(dtime);
+              client.print(dtime);
             }
             
             client.println();
@@ -193,34 +199,39 @@ void setup() {
   Firebase.setReadTimeout(firebaseData, 1000 * 20);
   Firebase.setwriteSizeLimit(firebaseData, "tiny");
   server.begin();
-
+  xTaskCreate(vServerHandler, "handles server", 50000, NULL, 2, &Shandler);
 }
 
 void loop() {
   if(readDataLocal()){
-    Serial.println("reading local data success!");
-    if(readDataFirebase())
-      Serial.println("reading firebase data success!");
+      Serial.println("reading local data success!");
+      if(readDataFirebase())
+        Serial.println("reading firebase data success!");
+      else
+        Serial.println("reading firebase data failure!");
+      if(setDataFirebase())
+        Serial.println("writing firebase data success!");
+      else
+        Serial.println("writing firebase data failure!");
+    }
     else
-      Serial.println("reading firebase data failure!");
-    if(setDataFirebase())
-      Serial.println("writing firebase data success!");
-    else
-      Serial.println("writing firebase data failure!");
-    handleServer();
-  }
-  else
-    Serial.println("reading local data failure!");
-  
-  delay(1000);
-  Serial.println("params:");
-  Serial.println(hum);
-  Serial.println(voc);
-  Serial.println(co2);
-  Serial.println(particulate);
-  Serial.println(hum_set);
-  Serial.println(voc_set);
-  Serial.println(co2_set);
-  Serial.println(particulate_set);
+      Serial.println("reading local data failure!");
+    Serial.println("params:");
+    Serial.println(hum);
+    Serial.println(voc);
+    Serial.println(co2);
+    Serial.println(particulate);
+    Serial.println(hum_set);
+    Serial.println(voc_set);
+    Serial.println(co2_set);
+    Serial.println(particulate_set);
+    vTaskDelay(5000);
+}
 
+
+void vServerHandler ( void *pvParameters ){
+  for(;;){
+    handleServer();
+    vTaskDelay(10);
+  }
 }

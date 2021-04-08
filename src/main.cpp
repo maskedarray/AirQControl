@@ -16,6 +16,10 @@ IPAddress pingip (8, 8, 8, 8);
 
 int hum, voc, co2, particulate;
 int hum_set, voc_set, co2_set, particulate_set;
+int delayTime[4];
+int pins[5] = {5,18,19,21,22};
+bool useTimed[4];
+bool combo[4];
 String dtime;
 FirebaseData firebaseData;
 IPAddress localip;
@@ -25,8 +29,9 @@ unsigned long currentTime = millis();
 unsigned long previousTime = 0; 
 const long timeoutTime = 2000;
 StaticJsonDocument<500> doc;
-TaskHandle_t Shandler;
+TaskHandle_t Shandler, TimedOp;
 void vServerHandler( void *pvParameters );
+void vTimedOp( void *pvParameters );
 /*
  * Things to get out of doc:
  * 1. voc
@@ -45,17 +50,43 @@ String IpAddress2String(const IPAddress& ipAddress)
 }
 
 void setRelays(){
-  digitalWrite(5, (voc > voc_set)? HIGH:LOW);
-  digitalWrite(18, (co2 > co2_set)? HIGH:LOW);
-  digitalWrite(19, (hum > hum_set)? HIGH:LOW);
-  digitalWrite(21, (particulate > particulate_set)? HIGH:LOW);
+  if(!useTimed[0]){
+    digitalWrite(pins[2], (hum > hum_set)? HIGH:LOW);
+  }
+  if(!useTimed[1]){
+    digitalWrite(pins[0], (voc > voc_set)? HIGH:LOW);
+  }
+  if(!useTimed[2]){
+    digitalWrite(pins[1], (co2 > co2_set)? HIGH:LOW);
+  }
+  if(!useTimed[3]){
+    digitalWrite(pins[3], (particulate > particulate_set)? HIGH:LOW);  
+  }
+  if((combo[0] && hum > hum_set) || (combo[1] && voc > voc_set) || (combo[2] && co2 > co2_set) || (combo[3] && particulate > particulate_set)){
+    digitalWrite(pins[4], HIGH);
+  } else{
+    digitalWrite(pins[4], LOW);
+  }
 }
 
 bool readDataFirebase(){
   if( Firebase.getInt(firebaseData, CLIENT_ID + String("/humidity_set"), hum_set) &
   Firebase.getInt(firebaseData, CLIENT_ID + String("/voc_set"), voc_set) &
   Firebase.getInt(firebaseData, CLIENT_ID + String("/co2_set"), co2_set) &
-  Firebase.getInt(firebaseData, CLIENT_ID + String("/particulate_set"), particulate_set)){
+  Firebase.getInt(firebaseData, CLIENT_ID + String("/particulate_set"), particulate_set) &
+  Firebase.getInt(firebaseData, CLIENT_ID + String("/hum_t"), delayTime[0]) &
+  Firebase.getInt(firebaseData, CLIENT_ID + String("/voc_t"), delayTime[1]) &
+  Firebase.getInt(firebaseData, CLIENT_ID + String("/co2_t"), delayTime[2]) &
+  Firebase.getInt(firebaseData, CLIENT_ID + String("/part_t"), delayTime[3]) &
+  Firebase.getBool(firebaseData, CLIENT_ID + String("/hum_t_b"), useTimed[0]) &
+  Firebase.getBool(firebaseData, CLIENT_ID + String("/voc_t_b"), useTimed[1]) &
+  Firebase.getBool(firebaseData, CLIENT_ID + String("/co2_t_b"), useTimed[2]) &
+  Firebase.getBool(firebaseData, CLIENT_ID + String("/part_t_b"), useTimed[3]) &
+  Firebase.getBool(firebaseData, CLIENT_ID + String("/hum_c"), combo[0]) &
+  Firebase.getBool(firebaseData, CLIENT_ID + String("/voc_c"), combo[1]) &
+  Firebase.getBool(firebaseData, CLIENT_ID + String("/co2_c"), combo[2]) &
+  Firebase.getBool(firebaseData, CLIENT_ID + String("/part_c"), combo[3])
+  ){
     Serial.println(hum_set);
     Serial.println(voc_set);
     Serial.println(co2_set);
@@ -161,8 +192,6 @@ void handleServer(){
             } else if (header.indexOf("GET /time") >= 0) {
               client.print(dtime);
             }
-            
-            client.println();
             // Break out of the while loop
             break;
           } else { // if you got a newline, then clear currentLine
@@ -184,10 +213,9 @@ void handleServer(){
 
 void setup() {
   Serial.begin(115200);
-  pinMode(5, OUTPUT);
-  pinMode(18, OUTPUT);
-  pinMode(19, OUTPUT);
-  pinMode(21, OUTPUT);
+  for (int i=0; i<5; i++){
+    pinMode(pins[i], OUTPUT);
+  }
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD); 
   Serial.print("connecting"); 
   while (WiFi.status() != WL_CONNECTED) { 
@@ -200,6 +228,7 @@ void setup() {
   Firebase.setwriteSizeLimit(firebaseData, "tiny");
   server.begin();
   xTaskCreate(vServerHandler, "handles server", 50000, NULL, 2, &Shandler);
+  xTaskCreate(vTimedOp, "timed relay operation", 10000, NULL, 2, &TimedOp);
 }
 
 void loop() {
@@ -233,5 +262,20 @@ void vServerHandler ( void *pvParameters ){
   for(;;){
     handleServer();
     vTaskDelay(10);
+  }
+}
+
+void vTimedOp( void *pvParameters ){
+  int counter = 0;
+  for(;;){
+    for (int i = 0; i < 4; i++){
+      if(useTimed[i] && (counter < delayTime[i])){ //TODO: update delaytime[i]
+        digitalWrite(pins[i], HIGH);
+      } else{
+        digitalWrite(pins[i], LOW);
+      }
+    }
+    counter++;
+    vTaskDelay(60000);
   }
 }

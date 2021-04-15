@@ -17,7 +17,7 @@ IPAddress pingip (8, 8, 8, 8);
 int hum, voc, co2, particulate;
 int hum_set, voc_set, co2_set, particulate_set;
 int delayTime[4];
-int pins[5] = {5,18,19,21,22};
+int pins[5] = {5,18,19,21,22};  //hum,voc,co2,pm25,comb
 bool useTimed[4];
 bool combo[4];
 String dtime;
@@ -51,21 +51,21 @@ String IpAddress2String(const IPAddress& ipAddress)
 
 void setRelays(){
   if(!useTimed[0]){
-    digitalWrite(pins[2], (hum > hum_set)? HIGH:LOW);
+    digitalWrite(pins[0], (hum > hum_set)? HIGH:LOW);
   }
   if(!useTimed[1]){
-    digitalWrite(pins[0], (voc > voc_set)? HIGH:LOW);
+    digitalWrite(pins[1], (voc > voc_set)? HIGH:LOW);
   }
   if(!useTimed[2]){
-    digitalWrite(pins[1], (co2 > co2_set)? HIGH:LOW);
+    digitalWrite(pins[3], (co2 > co2_set)? HIGH:LOW);
   }
   if(!useTimed[3]){
-    digitalWrite(pins[3], (particulate > particulate_set)? HIGH:LOW);  
+    digitalWrite(pins[4], (particulate > particulate_set)? HIGH:LOW);  
   }
   if((combo[0] && hum > hum_set) || (combo[1] && voc > voc_set) || (combo[2] && co2 > co2_set) || (combo[3] && particulate > particulate_set)){
-    digitalWrite(pins[4], HIGH);
+    digitalWrite(pins[5], HIGH);
   } else{
-    digitalWrite(pins[4], LOW);
+    digitalWrite(pins[5], LOW);
   }
 }
 

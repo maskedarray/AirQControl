@@ -5,13 +5,13 @@
 #include <HTTPClient.h>
 #include <ESP32Ping.h>
 
-#define FIREBASE_HOST "airqcontrol-dbc92-default-rtdb.firebaseio.com" 
-#define FIREBASE_AUTH "wy4VhHdDTtKxPNBIqzTSB9HcM0yFddrJHl2Rwlp4" 
+#define FIREBASE_HOST "airqcontrol-1473a-default-rtdb.firebaseio.com" 
+#define FIREBASE_AUTH "n4FwWS7EO2gyQ4aRi8Zcay4gpWaImAvJWJAgm3Ih" 
 #define WIFI_SSID "EiG" 
 #define WIFI_PASSWORD "12344321" 
 #define CLIENT_ID "/1"
 
-String serverName = "http://192.168.0.104:80/air-data/latest";
+String serverName = "http://192.168.254.148:80/air-data/latest";
 IPAddress pingip (8, 8, 8, 8);
 
 int hum, voc, co2, particulate;

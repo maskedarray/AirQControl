@@ -62,7 +62,7 @@ void setRelays(){
   if(!useTimed[3]){
     digitalWrite(pins[4], (particulate > particulate_set)? HIGH:LOW);  
   }
-  if((combo[0] && hum > hum_set) || (combo[1] && voc > voc_set) || (combo[2] && co2 > co2_set) || (combo[3] && particulate > particulate_set)){
+  if((combo[0] && (hum > hum_set)) || (combo[1] && (voc > voc_set)) || (combo[2] && (co2 > co2_set)) || (combo[3] && (particulate > particulate_set))){
     digitalWrite(pins[5], HIGH);
   } else{
     digitalWrite(pins[5], LOW);
@@ -87,10 +87,24 @@ bool readDataFirebase(){
   Firebase.getBool(firebaseData, CLIENT_ID + String("/co2_c"), combo[2]) &
   Firebase.getBool(firebaseData, CLIENT_ID + String("/part_c"), combo[3])
   ){
+    Serial.println("Settings: ");
     Serial.println(hum_set);
     Serial.println(voc_set);
     Serial.println(co2_set);
     Serial.println(particulate_set);
+    Serial.printf("Timed0: %d",useTimed[0]);
+    Serial.printf("Timed1: %d",useTimed[1]);
+    Serial.printf("Timed2: %d",useTimed[2]);
+    Serial.printf("Timed3: %d",useTimed[3]);
+    Serial.printf("Time0: %d",delayTime[0]);
+    Serial.printf("Time1: %d",delayTime[1]);
+    Serial.printf("Time2: %d",delayTime[2]);
+    Serial.printf("Time3: %d",delayTime[3]);
+    Serial.printf("combo0: %d",combo[0]);
+    Serial.printf("combo1: %d",combo[1]);
+    Serial.printf("combo2: %d",combo[2]);
+    Serial.printf("combo3: %d",combo[3]);
+    setRelays();
     return true;
   }
   return false;
@@ -116,14 +130,10 @@ bool readDataLocal(){
         dtime = doc["timestamp"].as<String>();
         dtime.replace("T"," ");
         dtime = dtime.substring(0,19);
-        hum = hum + random(0,10);
-        voc = voc + random(0,10);
-        co2 = co2 + random(0,10);
-        Serial.println(voc);
-        Serial.println(particulate);
-        Serial.println(co2);
         Serial.println(hum);
-        setRelays();
+        Serial.println(voc);
+        Serial.println(co2);
+        Serial.println(particulate);
         http.end();
         return true;
       }
@@ -245,15 +255,6 @@ void loop() {
     }
     else
       Serial.println("reading local data failure!");
-    Serial.println("params:");
-    Serial.println(hum);
-    Serial.println(voc);
-    Serial.println(co2);
-    Serial.println(particulate);
-    Serial.println(hum_set);
-    Serial.println(voc_set);
-    Serial.println(co2_set);
-    Serial.println(particulate_set);
     vTaskDelay(5000);
 }
 

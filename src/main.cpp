@@ -62,7 +62,8 @@ void setRelays(){
   if(!useTimed[3]){
     digitalWrite(pins[3], (particulate > particulate_set)? HIGH:LOW);  
   }
-  if((combo[0] && (hum > hum_set)) || (combo[1] && (voc > voc_set)) || (combo[2] && (co2 > co2_set)) || (combo[3] && (particulate > particulate_set))){
+  if((combo[0] && (hum > hum_set) && !useTimed[0]) || (combo[1] && (voc > voc_set) && !useTimed[1]) || 
+      (combo[2] && (co2 > co2_set) && !useTimed[2]) || (combo[3] && (particulate > particulate_set) && !useTimed[3])){
     digitalWrite(pins[4], HIGH);
   } else{
     digitalWrite(pins[4], LOW);

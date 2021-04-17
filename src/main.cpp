@@ -57,15 +57,16 @@ void setRelays(){
     digitalWrite(pins[1], (voc > voc_set)? HIGH:LOW);
   }
   if(!useTimed[2]){
-    digitalWrite(pins[3], (co2 > co2_set)? HIGH:LOW);
+    digitalWrite(pins[2], (co2 > co2_set)? HIGH:LOW);
   }
   if(!useTimed[3]){
-    digitalWrite(pins[4], (particulate > particulate_set)? HIGH:LOW);  
+    digitalWrite(pins[3], (particulate > particulate_set)? HIGH:LOW);  
   }
-  if((combo[0] && (hum > hum_set)) || (combo[1] && (voc > voc_set)) || (combo[2] && (co2 > co2_set)) || (combo[3] && (particulate > particulate_set))){
-    digitalWrite(pins[5], HIGH);
+  if(((combo[0] && (hum > hum_set)) || (combo[0] == LOW)) && ((combo[1] && (voc > voc_set)) || (combo[1] ==LOW)) && 
+      ((combo[2] && (co2 > co2_set)) || (combo[2] == LOW)) && ((combo[3] && (particulate > particulate_set)) || (combo[3] == LOW))){
+    digitalWrite(pins[4], HIGH);
   } else{
-    digitalWrite(pins[5], LOW);
+    digitalWrite(pins[4], LOW);
   }
 }
 
@@ -239,7 +240,7 @@ void setup() {
   Firebase.setwriteSizeLimit(firebaseData, "tiny");
   // server.begin();
   // xTaskCreate(vServerHandler, "handles server", 50000, NULL, 2, &Shandler);
-  //xTaskCreate(vTimedOp, "timed relay operation", 10000, NULL, 2, &TimedOp);
+  xTaskCreate(vTimedOp, "timed relay operation", 10000, NULL, 2, &TimedOp);
 }
 
 void loop() {
@@ -278,6 +279,9 @@ void vTimedOp( void *pvParameters ){
       }
     }
     counter++;
-    vTaskDelay(60000);
+    if (counter >= 60 ){
+      counter = 0;
+    }
+    vTaskDelay(1000);
   }
 }

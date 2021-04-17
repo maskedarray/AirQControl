@@ -62,8 +62,7 @@ void setRelays(){
   if(!useTimed[3]){
     digitalWrite(pins[3], (particulate > particulate_set)? HIGH:LOW);  
   }
-  if(((combo[0] && (hum > hum_set)) || (combo[0] == LOW)) && ((combo[1] && (voc > voc_set)) || (combo[1] ==LOW)) && 
-      ((combo[2] && (co2 > co2_set)) || (combo[2] == LOW)) && ((combo[3] && (particulate > particulate_set)) || (combo[3] == LOW))){
+  if((combo[0] && (hum > hum_set)) || (combo[1] && (voc > voc_set)) || (combo[2] && (co2 > co2_set)) || (combo[3] && (particulate > particulate_set))){
     digitalWrite(pins[4], HIGH);
   } else{
     digitalWrite(pins[4], LOW);
@@ -272,10 +271,12 @@ void vTimedOp( void *pvParameters ){
   int counter = 0;
   for(;;){
     for (int i = 0; i < 4; i++){
-      if(useTimed[i] && (counter < delayTime[i])){ //TODO: update delaytime[i]
-        digitalWrite(pins[i], HIGH);
-      } else{
-        digitalWrite(pins[i], LOW);
+      if(useTimed[i]){
+        if (counter < delayTime[i]){ 
+          digitalWrite(pins[i], HIGH);
+        } else{
+          digitalWrite(pins[i], LOW);
+        }
       }
     }
     counter++;

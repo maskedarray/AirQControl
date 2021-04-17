@@ -284,6 +284,6 @@ void vTimedOp( void *pvParameters ){
     if (counter >= 60 ){
       counter = 0;
     }
-    vTaskDelay(1000);
+    vTaskDelay(60000);
   }
 }

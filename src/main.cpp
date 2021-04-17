@@ -9,9 +9,9 @@
 #define FIREBASE_AUTH "n4FwWS7EO2gyQ4aRi8Zcay4gpWaImAvJWJAgm3Ih" 
 #define WIFI_SSID "EiG" 
 #define WIFI_PASSWORD "12344321" 
-#define CLIENT_ID "/1"
+#define CLIENT_ID "/987"
 
-String serverName = "http://192.168.254.148:80/air-data/latest";
+String serverName = "http://192.168.0.113:80/air-data/latest";
 IPAddress pingip (8, 8, 8, 8);
 
 int hum, voc, co2, particulate;

@@ -232,13 +232,14 @@ void setup() {
     Serial.print("."); 
     delay(500); 
   } 
+  Serial.println("Connected");
   Firebase.begin(FIREBASE_HOST, FIREBASE_AUTH);
   Firebase.reconnectWiFi(true);
   Firebase.setReadTimeout(firebaseData, 1000 * 20);
   Firebase.setwriteSizeLimit(firebaseData, "tiny");
-  server.begin();
-  xTaskCreate(vServerHandler, "handles server", 50000, NULL, 2, &Shandler);
-  xTaskCreate(vTimedOp, "timed relay operation", 10000, NULL, 2, &TimedOp);
+  // server.begin();
+  // xTaskCreate(vServerHandler, "handles server", 50000, NULL, 2, &Shandler);
+  //xTaskCreate(vTimedOp, "timed relay operation", 10000, NULL, 2, &TimedOp);
 }
 
 void loop() {

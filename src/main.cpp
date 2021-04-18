@@ -19,6 +19,7 @@ int hum, voc, co2, particulate, temperature;
 int hum_set, voc_set, co2_set, particulate_set;
 long prevTime[4];
 int delayTime[4];
+int relay_states[4];
 int pins[5] = {5,18,19,21,22};  //hum,voc,co2,pm25,comb
 bool useTimed[4];
 bool combo[4];
@@ -55,18 +56,22 @@ void setRelays(){
   if(!useTimed[0] && (abs(millis() - prevTime[0]) > HYSTERISIS_TIME)){
     prevTime[0] = millis();
     digitalWrite(pins[0], (hum > hum_set)? HIGH:LOW);
+    relay_states[0] = (hum > hum_set)? 1:0;
   }
   if(!useTimed[1] && (abs(millis() - prevTime[1]) > HYSTERISIS_TIME)){
     prevTime[1] = millis();
     digitalWrite(pins[1], (voc > voc_set)? HIGH:LOW);
+    relay_states[0] = (voc > voc_set)? 1:0;
   }
   if(!useTimed[2] && (abs(millis() - prevTime[2]) > HYSTERISIS_TIME)){
     prevTime[2] = millis();
     digitalWrite(pins[2], (co2 > co2_set)? HIGH:LOW);
+    relay_states[0] = (co2 > co2_set)? 1:0;
   }
   if(!useTimed[3] && (abs(millis() - prevTime[3]) > HYSTERISIS_TIME)){
     prevTime[3] = millis();
     digitalWrite(pins[3], (particulate > particulate_set)? HIGH:LOW);  
+    relay_states[0] = (particulate > particulate_set)? 1:0;
   }
   if((combo[0] && (hum > hum_set)) || (combo[1] && (voc > voc_set)) || 
       (combo[2] && (co2 > co2_set)) || (combo[3] && (particulate > particulate_set))){
@@ -168,6 +173,10 @@ bool setDataFirebase(){
   Firebase.setInt(firebaseData, CLIENT_ID + String("/co2"), co2) &
   Firebase.setInt(firebaseData, CLIENT_ID + String("/particulate"), particulate) &
   Firebase.setInt(firebaseData, CLIENT_ID + String("/temp"), temperature) &
+  Firebase.setInt(firebaseData, CLIENT_ID + String("/hum_state"), relay_states[0]) &
+  Firebase.setInt(firebaseData, CLIENT_ID + String("/voc_state"), relay_states[1]) &
+  Firebase.setInt(firebaseData, CLIENT_ID + String("/co2_state"), relay_states[2]) &
+  Firebase.setInt(firebaseData, CLIENT_ID + String("/part_state"), relay_states[3]) &
   Firebase.setString(firebaseData, CLIENT_ID + String("/time"), dtime)){
     return true;
   }

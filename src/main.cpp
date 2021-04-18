@@ -10,12 +10,14 @@
 #define WIFI_SSID "EiG" 
 #define WIFI_PASSWORD "12344321" 
 #define CLIENT_ID "/987"
+#define HYSTERISIS_TIME 60000
 
 String serverName = "http://192.168.0.113:80/air-data/latest";
 IPAddress pingip (8, 8, 8, 8);
 
 int hum, voc, co2, particulate, temperature;
 int hum_set, voc_set, co2_set, particulate_set;
+long prevTime[4];
 int delayTime[4];
 int pins[5] = {5,18,19,21,22};  //hum,voc,co2,pm25,comb
 bool useTimed[4];
@@ -50,20 +52,24 @@ String IpAddress2String(const IPAddress& ipAddress)
 }
 
 void setRelays(){
-  if(!useTimed[0]){
+  if(!useTimed[0] && (abs(millis() - prevTime[0]) > HYSTERISIS_TIME)){
+    prevTime[0] = millis();
     digitalWrite(pins[0], (hum > hum_set)? HIGH:LOW);
   }
-  if(!useTimed[1]){
+  if(!useTimed[1] && (abs(millis() - prevTime[1]) > HYSTERISIS_TIME)){
+    prevTime[1] = millis();
     digitalWrite(pins[1], (voc > voc_set)? HIGH:LOW);
   }
-  if(!useTimed[2]){
+  if(!useTimed[2] && (abs(millis() - prevTime[2]) > HYSTERISIS_TIME)){
+    prevTime[2] = millis();
     digitalWrite(pins[2], (co2 > co2_set)? HIGH:LOW);
   }
-  if(!useTimed[3]){
+  if(!useTimed[3] && (abs(millis() - prevTime[3]) > HYSTERISIS_TIME)){
+    prevTime[3] = millis();
     digitalWrite(pins[3], (particulate > particulate_set)? HIGH:LOW);  
   }
-  if((combo[0] && (hum > hum_set) && !useTimed[0]) || (combo[1] && (voc > voc_set) && !useTimed[1]) || 
-      (combo[2] && (co2 > co2_set) && !useTimed[2]) || (combo[3] && (particulate > particulate_set) && !useTimed[3])){
+  if((combo[0] && (hum > hum_set)) || (combo[1] && (voc > voc_set)) || 
+      (combo[2] && (co2 > co2_set)) || (combo[3] && (particulate > particulate_set))){
     digitalWrite(pins[4], HIGH);
   } else{
     digitalWrite(pins[4], LOW);

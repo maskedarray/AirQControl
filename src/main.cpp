@@ -14,7 +14,7 @@
 String serverName = "http://192.168.0.113:80/air-data/latest";
 IPAddress pingip (8, 8, 8, 8);
 
-int hum, voc, co2, particulate;
+int hum, voc, co2, particulate, temperature;
 int hum_set, voc_set, co2_set, particulate_set;
 int delayTime[4];
 int pins[5] = {5,18,19,21,22};  //hum,voc,co2,pm25,comb
@@ -128,6 +128,7 @@ bool readDataLocal(){
         voc = doc["voc"];
         co2 = doc["co2"];
         particulate = doc["pm25"];
+        temperature = doc["temp"];
         dtime = doc["timestamp"].as<String>();
         dtime.replace("T"," ");
         dtime = dtime.substring(0,19);
@@ -160,6 +161,7 @@ bool setDataFirebase(){
   Firebase.setInt(firebaseData, CLIENT_ID + String("/voc"), voc) &
   Firebase.setInt(firebaseData, CLIENT_ID + String("/co2"), co2) &
   Firebase.setInt(firebaseData, CLIENT_ID + String("/particulate"), particulate) &
+  Firebase.setInt(firebaseData, CLIENT_ID + String("/temp"), temperature) &
   Firebase.setString(firebaseData, CLIENT_ID + String("/time"), dtime)){
     return true;
   }

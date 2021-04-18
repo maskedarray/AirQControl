@@ -140,6 +140,7 @@ bool readDataLocal(){
         co2 = doc["co2"];
         particulate = doc["pm25"];
         temperature = doc["temp"];
+        temperature = (temperature*1.8) + 32;
         dtime = doc["timestamp"].as<String>();
         dtime.replace("T"," ");
         dtime = dtime.substring(0,19);
@@ -322,8 +323,10 @@ void vTimedOp( void *pvParameters ){
       if(useTimed[i]){
         if (counter < delayTime[i]){ 
           digitalWrite(pins[i], HIGH);
+          relay_states[i] = 1;
         } else{
           digitalWrite(pins[i], LOW);
+          relay_states[i] = 0;
         }
       }
     }

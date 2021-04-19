@@ -152,12 +152,12 @@ bool readDataLocal(){
         dtime = doc["timestamp"].as<String>();
         dtime.replace("T"," ");
         dtime = dtime.substring(0,19);
-        int iyear = dtime.substring(1,5);
-        int imonth = dtime.substring(6,8);
-        int iday = dtime.substring(9,11);
-        int ihr = dtime.substring(12,14);
-        int imin = dtime.substring(15,17);
-        int isec = dtime.substring(18,20);
+        int iyear = dtime.substring(1,5).toInt();
+        int imonth = dtime.substring(6,8).toInt();
+        int iday = dtime.substring(9,11).toInt();
+        int ihr = dtime.substring(12,14).toInt();
+        int imin = dtime.substring(15,17).toInt();
+        int isec = dtime.substring(18,20).toInt();
         DateTime temp1(iyear,imonth, iday, ihr, imin, isec);
         TimeSpan temp2(0,timezone, 0,0);
         temp1 = temp1 + temp2;

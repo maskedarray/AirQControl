@@ -11,7 +11,7 @@
 #define WIFI_SSID "EiG" 
 #define WIFI_PASSWORD "12344321" 
 #define CLIENT_ID "/987"
-#define HYSTERISIS_TIME 60000
+#define HYSTERISIS_TIME 120000
 
 String serverName = "http://192.168.0.113:80/air-data/latest";
 IPAddress pingip (8, 8, 8, 8);

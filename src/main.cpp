@@ -4,6 +4,7 @@
 #include "ArduinoJson.h"
 #include <HTTPClient.h>
 #include <ESP32Ping.h>
+#include <RTClib.h>
 
 #define FIREBASE_HOST "airqcontrol-1473a-default-rtdb.firebaseio.com" 
 #define FIREBASE_AUTH "n4FwWS7EO2gyQ4aRi8Zcay4gpWaImAvJWJAgm3Ih" 
@@ -17,6 +18,7 @@ IPAddress pingip (8, 8, 8, 8);
 
 int hum, voc, co2, particulate, temperature;
 int hum_set, voc_set, co2_set, particulate_set;
+int timezone;
 long prevTime[4];
 int delayTime[4];
 int relay_states[4];
@@ -53,25 +55,30 @@ String IpAddress2String(const IPAddress& ipAddress)
 }
 
 void setRelays(){
-  if(!useTimed[0] && (abs(millis() - prevTime[0]) > HYSTERISIS_TIME)){
+  bool newstate[4];
+  newstate[0] = (hum > hum_set)? HIGH:LOW;
+  newstate[1] = (voc > voc_set)? HIGH:LOW;
+  newstate[3] = (co2 > co2_set)? HIGH:LOW;
+  newstate[4] = (particulate > particulate_set)? HIGH:LOW;
+  if(!useTimed[0] && ((abs(millis() - prevTime[0]) > HYSTERISIS_TIME) || newstate[0])){
     prevTime[0] = millis();
     digitalWrite(pins[0], (hum > hum_set)? HIGH:LOW);
     relay_states[0] = (hum > hum_set)? 1:0;
   }
-  if(!useTimed[1] && (abs(millis() - prevTime[1]) > HYSTERISIS_TIME)){
+  if(!useTimed[1] && ((abs(millis() - prevTime[1]) > HYSTERISIS_TIME) || newstate[1])){
     prevTime[1] = millis();
     digitalWrite(pins[1], (voc > voc_set)? HIGH:LOW);
-    relay_states[0] = (voc > voc_set)? 1:0;
+    relay_states[1] = (voc > voc_set)? 1:0;
   }
-  if(!useTimed[2] && (abs(millis() - prevTime[2]) > HYSTERISIS_TIME)){
+  if(!useTimed[2] && ((abs(millis() - prevTime[2]) > HYSTERISIS_TIME) || newstate[2])){
     prevTime[2] = millis();
     digitalWrite(pins[2], (co2 > co2_set)? HIGH:LOW);
-    relay_states[0] = (co2 > co2_set)? 1:0;
+    relay_states[2] = (co2 > co2_set)? 1:0;
   }
-  if(!useTimed[3] && (abs(millis() - prevTime[3]) > HYSTERISIS_TIME)){
+  if(!useTimed[3] && ((abs(millis() - prevTime[3]) > HYSTERISIS_TIME) || newstate[3])){
     prevTime[3] = millis();
     digitalWrite(pins[3], (particulate > particulate_set)? HIGH:LOW);  
-    relay_states[0] = (particulate > particulate_set)? 1:0;
+    relay_states[3] = (particulate > particulate_set)? 1:0;
   }
   if((combo[0] && (hum > hum_set)) || (combo[1] && (voc > voc_set)) || 
       (combo[2] && (co2 > co2_set)) || (combo[3] && (particulate > particulate_set))){
@@ -97,7 +104,8 @@ bool readDataFirebase(){
   Firebase.getBool(firebaseData, CLIENT_ID + String("/hum_c"), combo[0]) &
   Firebase.getBool(firebaseData, CLIENT_ID + String("/voc_c"), combo[1]) &
   Firebase.getBool(firebaseData, CLIENT_ID + String("/co2_c"), combo[2]) &
-  Firebase.getBool(firebaseData, CLIENT_ID + String("/part_c"), combo[3])
+  Firebase.getBool(firebaseData, CLIENT_ID + String("/part_c"), combo[3]) &
+  Firebase.getInt(firebaseData, CLIENT_ID + String("/timezone"), timezone)
   ){
     Serial.println("Settings: ");
     Serial.println(hum_set);
@@ -144,6 +152,16 @@ bool readDataLocal(){
         dtime = doc["timestamp"].as<String>();
         dtime.replace("T"," ");
         dtime = dtime.substring(0,19);
+        int iyear = dtime.substring(1,5);
+        int imonth = dtime.substring(6,8);
+        int iday = dtime.substring(9,11);
+        int ihr = dtime.substring(12,14);
+        int imin = dtime.substring(15,17);
+        int isec = dtime.substring(18,20);
+        DateTime temp1(iyear,imonth, iday, ihr, imin, isec);
+        TimeSpan temp2(0,timezone, 0,0);
+        temp1 = temp1 + temp2;
+        dtime = String(temp1.year()) + "-" + String(temp1.month()) + "-" + String(temp1.day()) + " " + String(temp1.hour()) + ":" + String(temp1.minute()) + ":" + String(temp1.second());
         Serial.println(hum);
         Serial.println(voc);
         Serial.println(co2);

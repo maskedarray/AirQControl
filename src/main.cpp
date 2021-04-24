@@ -268,6 +268,8 @@ void setup() {
   for (int i=0; i<5; i++){
     pinMode(pins[i], OUTPUT);
   }
+  pinMode(2, OUTPUT);
+  digitalWrite(2, LOW);
   int nwf = WiFi.scanNetworks();
   Serial.println("scan done");
   if (nwf == 0) {
@@ -304,6 +306,7 @@ void setup() {
     }
     delay(500); 
   }  
+  digitalWrite(2, HIGH);
   Serial.println("Connected");
   Firebase.begin(FIREBASE_HOST, FIREBASE_AUTH);
   Firebase.reconnectWiFi(true);

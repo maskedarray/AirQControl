@@ -16,7 +16,8 @@
 String serverName = "http://192.168.0.113:80/air-data/latest";
 IPAddress pingip (8, 8, 8, 8);
 
-int hum, voc, co2, particulate, temperature;
+int hum, voc, co2, particulate;
+float temperature;
 int hum_set, voc_set, co2_set, particulate_set;
 int timezone;
 long prevTime[4];
@@ -60,23 +61,27 @@ void setRelays(){
   newstate[1] = (voc > voc_set)? HIGH:LOW;
   newstate[3] = (co2 > co2_set)? HIGH:LOW;
   newstate[4] = (particulate > particulate_set)? HIGH:LOW;
-  if(!useTimed[0] && ((abs(millis() - prevTime[0]) > HYSTERISIS_TIME) || newstate[0])){
-    prevTime[0] = millis();
+  if(!useTimed[0] && ((abs(millis() - prevTime[0]) > HYSTERISIS_TIME) || !newstate[0])){
+    if(newstate[0] != relay_states[0])
+      prevTime[0] = millis();
     digitalWrite(pins[0], (hum > hum_set)? HIGH:LOW);
     relay_states[0] = (hum > hum_set)? 1:0;
   }
-  if(!useTimed[1] && ((abs(millis() - prevTime[1]) > HYSTERISIS_TIME) || newstate[1])){
-    prevTime[1] = millis();
+  if(!useTimed[1] && ((abs(millis() - prevTime[1]) > HYSTERISIS_TIME) || !newstate[1])){
+    if(newstate[1] != relay_states[1])
+      prevTime[1] = millis();
     digitalWrite(pins[1], (voc > voc_set)? HIGH:LOW);
     relay_states[1] = (voc > voc_set)? 1:0;
   }
-  if(!useTimed[2] && ((abs(millis() - prevTime[2]) > HYSTERISIS_TIME) || newstate[2])){
-    prevTime[2] = millis();
+  if(!useTimed[2] && ((abs(millis() - prevTime[2]) > HYSTERISIS_TIME) || !newstate[2])){
+    if(newstate[2] != relay_states[2])
+      prevTime[2] = millis();
     digitalWrite(pins[2], (co2 > co2_set)? HIGH:LOW);
     relay_states[2] = (co2 > co2_set)? 1:0;
   }
-  if(!useTimed[3] && ((abs(millis() - prevTime[3]) > HYSTERISIS_TIME) || newstate[3])){
-    prevTime[3] = millis();
+  if(!useTimed[3] && ((abs(millis() - prevTime[3]) > HYSTERISIS_TIME) || !newstate[3])){
+    if(newstate[3] != relay_states[3])
+      prevTime[3] = millis();
     digitalWrite(pins[3], (particulate > particulate_set)? HIGH:LOW);  
     relay_states[3] = (particulate > particulate_set)? 1:0;
   }
@@ -191,7 +196,7 @@ bool setDataFirebase(){
   Firebase.setInt(firebaseData, CLIENT_ID + String("/voc"), voc) &
   Firebase.setInt(firebaseData, CLIENT_ID + String("/co2"), co2) &
   Firebase.setInt(firebaseData, CLIENT_ID + String("/particulate"), particulate) &
-  Firebase.setInt(firebaseData, CLIENT_ID + String("/temp"), temperature) &
+  Firebase.setInt(firebaseData, CLIENT_ID + String("/temp"), (int)round(temperature)) &
   Firebase.setInt(firebaseData, CLIENT_ID + String("/hum_state"), relay_states[0]) &
   Firebase.setInt(firebaseData, CLIENT_ID + String("/voc_state"), relay_states[1]) &
   Firebase.setInt(firebaseData, CLIENT_ID + String("/co2_state"), relay_states[2]) &

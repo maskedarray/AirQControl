@@ -85,8 +85,8 @@ void setRelays(){
     digitalWrite(pins[3], (particulate > particulate_set)? HIGH:LOW);  
     relay_states[3] = (particulate > particulate_set)? 1:0;
   }
-  if((combo[0] && (hum > hum_set)) || (combo[1] && (voc > voc_set)) || 
-      (combo[2] && (co2 > co2_set)) || (combo[3] && (particulate > particulate_set))){
+  if((combo[0] && relay_states[0]) || (combo[1] && relay_states[1]) || 
+      (combo[2] && relay_states[2]) || (combo[3] && relay_states[3])){
     digitalWrite(pins[4], HIGH);
   } else{
     digitalWrite(pins[4], LOW);

@@ -313,7 +313,7 @@ void setup() {
   Firebase.setReadTimeout(firebaseData, 1000 * 20);
   Firebase.setwriteSizeLimit(firebaseData, "tiny");
   // server.begin();
-  // xTaskCreate(vServerHandler, "handles server", 50000, NULL, 2, &Shandler);
+   xTaskCreate(vServerHandler, "handles server", 10000, NULL, 2, &Shandler);
   xTaskCreate(vTimedOp, "timed relay operation", 10000, NULL, 2, &TimedOp);
 }
 
@@ -337,8 +337,12 @@ void loop() {
 
 void vServerHandler ( void *pvParameters ){
   for(;;){
-    handleServer();
-    vTaskDelay(10);
+    if(WiFi.isConnected()){
+      digitalWrite(2, HIGH);
+    } else{
+      digitalWrite(2, LOW);
+    }
+    vTaskDelay(100);
   }
 }
 

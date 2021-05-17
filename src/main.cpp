@@ -341,6 +341,40 @@ void vServerHandler ( void *pvParameters ){
       digitalWrite(2, HIGH);
     } else{
       digitalWrite(2, LOW);
+      int nwf = WiFi.scanNetworks();
+      Serial.println("scan done");
+      if (nwf == 0) {
+        Serial.println("no networks found");
+      } else {
+        Serial.print(nwf);
+        Serial.println(" networks found");
+        for (int i = 0; i < nwf; ++i) {
+          // Print SSID and RSSI for each network found
+          Serial.print(i + 1);
+          Serial.print(": ");
+          Serial.print(WiFi.SSID(i));
+          Serial.print(" (");
+          Serial.print(WiFi.RSSI(i));
+          Serial.print(")");
+          Serial.println((WiFi.encryptionType(i) == WIFI_AUTH_OPEN) ? " " : "*");
+          delay(10);
+        }
+      }
+      WiFi.mode(WIFI_STA);
+      vTaskDelay(1000);
+      WiFi.disconnect();
+      delay(1000);
+      WiFi.begin(WIFI_SSID, WIFI_PASSWORD); 
+      Serial.print("connecting"); 
+      int wf_con_counter = 0;
+      while (WiFi.status() != WL_CONNECTED) { 
+        Serial.print("."); 
+        wf_con_counter++;
+        if (wf_con_counter > 20){
+          break;
+        }
+        vTaskDelay(500); 
+      }  
     }
     vTaskDelay(100);
   }
